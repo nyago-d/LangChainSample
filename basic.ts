@@ -6,25 +6,7 @@ import { StringOutputParser, CommaSeparatedListOutputParser } from "@langchain/c
 import { AIMessage } from "@langchain/core/messages";
 import { LLMChain } from "langchain/chains";
 
-(async () => {
-
-    await simpleChat1();
-    await simpleChat2();
-    await simpleChat2();
-    
-    await prompt1();
-    await prompt2();
-
-    await parseOutput1();
-    await parseOutput2();
-
-    await chain1();
-    await chain2();
-    await chain3();
-
-})();
-
-async function simpleChat1() {
+export async function simpleChat1() {
 
     const chat = new ChatOpenAI({
         openAIApiKey: process.env.OPENAI_API_KEY,
@@ -33,25 +15,28 @@ async function simpleChat1() {
 
     const result = await chat.invoke("こんばんは");
     console.log(result);
+    return result;
 }
 
-async function simpleChat2() {
+export async function simpleChat2() {
 
     const chat = new ChatOpenAI();
 
     const result = await chat.invoke("こんばんは");
     console.log(result);
+    return result;
 }
 
-async function simpleChat3() {
+export async function simpleChat3() {
 
     const chat = new ChatGoogleGenerativeAI();
 
     const result = await chat.invoke("こんばんは");
     console.log(result.content);
+    return result;
 }
 
-async function prompt1() {
+export　async function prompt1() {
 
     const promptTemplate1 = new PromptTemplate({
         template: "今日は{day_of_week}、明日は？",
@@ -59,14 +44,19 @@ async function prompt1() {
     });
     const prompt1 = await promptTemplate1.format({ day_of_week: "金曜日" });
     console.log(prompt1);
+    return prompt1;
+}
+
+export async function prompt2() {
 
     // fromTemplateを使うと変数は勝手にいい感じにしてくれる
     const promptTemplate2 = PromptTemplate.fromTemplate("今日は{day_of_week}、明日は？");
     const prompt2 = await promptTemplate2.format({ day_of_week: "金曜日" });
     console.log(prompt2);
+    return prompt2;
 }
 
-async function prompt2() {
+export async function prompt3() {
 
     const chatTemplate1 = ChatPromptTemplate.fromMessages([
         [ "system", "あなたは{role}です" ],
@@ -74,6 +64,10 @@ async function prompt2() {
     ]);
     const prompt1 = await chatTemplate1.format({ role: "賢い猫", kinds: "食べ物" });
     console.log(prompt1);
+    return prompt1;
+}
+
+export async function prompt4() {
 
     const chatTemplate2 = ChatPromptTemplate.fromMessages([
         SystemMessagePromptTemplate.fromTemplate("あなたは{role}です"),
@@ -81,9 +75,10 @@ async function prompt2() {
     ]);
     const prompt2 = await chatTemplate2.format({ role: "賢い猫", kinds: "食べ物" });
     console.log(prompt2);
+    return prompt2;
 }
 
-async function parseOutput1() {
+export async function parseOutput1() {
 
     const message = new AIMessage({
         content: 'こんばんは！なんかご用ですか？'
@@ -92,9 +87,10 @@ async function parseOutput1() {
     const outputParser = new StringOutputParser();
     const result = await outputParser.invoke(message);
     console.log(result);
+    return result;
 }
 
-async function parseOutput2() {
+export async function parseOutput2() {
 
     const message = new AIMessage({
         content: '春,夏,秋,冬'
@@ -103,9 +99,10 @@ async function parseOutput2() {
     const outputParser = new CommaSeparatedListOutputParser();
     const result = await outputParser.invoke(message);
     console.log(result);
+    return result;
 }
 
-async function chain1() {
+export async function chain1() {
 
     const chatTemplate = ChatPromptTemplate.fromMessages([
         SystemMessagePromptTemplate.fromTemplate("あなたは{role}です"),
@@ -120,9 +117,10 @@ async function chain1() {
     const result = await outputParser.invoke(chatResult);
 
     console.log(result);
+    return result;
 }
 
-async function chain2() {
+export async function chain2() {
 
     const chatTemplate = ChatPromptTemplate.fromMessages([
         SystemMessagePromptTemplate.fromTemplate("あなたは{role}です"),
@@ -133,9 +131,10 @@ async function chain2() {
 
     const result = await chatTemplate.pipe(chat).pipe(outputParser).invoke({ role: "賢い猫", kinds: "食べ物" });
     console.log(result);
+    return result;
 }
 
-async function chain3() {
+export async function chain3() {
 
     const chatTemplate = ChatPromptTemplate.fromMessages([
         SystemMessagePromptTemplate.fromTemplate("あなたは{role}です"),
@@ -153,4 +152,5 @@ async function chain3() {
 
     const result = await chain.invoke({ role: "賢い猫", kinds: "食べ物" });
     console.log(result);
+    return result;
 }
