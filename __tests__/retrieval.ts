@@ -1,21 +1,34 @@
-import { documentLoader3, textSplitter1, textSplitter2, textSplitter3, textSplitter4, embedding1, embedding2 } from "../retrieval";
+import { documentLoader3, textSplitter1, textSplitter2, textSplitter3, textSplitter4, embedding1, embedding2, vectorStore1, vectorStore2, retriever1, retriever2 } from "../retrieval";
+import { Chroma } from '@langchain/community/vectorstores/chroma';
+import { Document } from "@langchain/core/documents";
+import { OpenAIEmbeddings } from "@langchain/openai";
+import { WikipediaQueryRun } from '@langchain/community/tools/wikipedia_query_run';
 
 let embedQueryMock = jest.fn();
-jest.mock("@langchain/openai", () => {
-    return {
-        OpenAIEmbeddings: jest.fn().mockImplementation((_) => {
-            return { 
-                embedQuery: embedQueryMock
-            };
-        })
-    };
-});
+let documents: Document[] = [];
 
 // 前準備
 beforeAll(() => {
+    
     // ログが邪魔なので静かにさせておく
     jest.spyOn(global.console, "log").mockImplementation(() => {});
     jest.spyOn(global.console, "warn").mockImplementation(() => {});
+
+    // クラス定義ごと書き換える場合もjest.mockよりjest.spyOnでprototype指定する方書きやすくていいかも
+    // そのまま関数参照にしてしまうと差し替えられないので、mockReturnValueではなくmockImplementationを使う
+    jest.spyOn(OpenAIEmbeddings.prototype, "embedQuery").mockImplementation((text) => embedQueryMock(text));
+    jest.spyOn(Chroma.prototype, "similaritySearch").mockImplementation(() => Promise.resolve(documents));
+    jest.spyOn(Chroma.prototype, "addDocuments").mockImplementation((docs: Document[]) => {
+        documents.push(...docs);
+        return Promise.resolve([]);
+    });
+    jest.spyOn(WikipediaQueryRun.prototype, "call").mockImplementation(() => Promise.resolve("すみっコぐらしはいいぞ。"));
+});
+
+// 毎回のリセット
+beforeEach(() => {
+    embedQueryMock = jest.fn();
+    documents = [];
 });
 
 // 後片付け
@@ -117,5 +130,53 @@ describe('Embeddingのテスト', () => {
         expect(result[0]).toBeGreaterThan(result[1]);
         expect(result[0]).toBeGreaterThan(result[2]);
         expect(result[1]).toBeGreaterThan(result[2]);
+    });
+});
+
+// このあたりもテストとして意味は特にないけど練習ということでね
+describe('VectorStoreのテスト', () => {
+
+    it("VectorStoreの参照", async () => {
+        documents = [    
+            new Document({ pageContent: "doc1" }),
+            new Document({ pageContent: "doc2" })
+        ];
+        const result = await vectorStore1();
+        expect(result.length).toBe(2);
+        expect(result[0].pageContent).toBe("doc1");
+        expect(result[1].pageContent).toBe("doc2");
+    });
+
+    it("VectorStoreへの追加", async () => {
+        documents = [    
+            new Document({ pageContent: "doc1" })
+        ];
+        const result = await vectorStore2();
+        expect(result.length).toBe(3);
+        expect(result[0].pageContent).toBe("doc1");
+        expect(result[1].pageContent).toBe("吾輩は猫である。名前はまだない。どこで生れたか頓と見当がつかぬ");
+        expect(result[2].pageContent).toBe("何でも薄暗いじめじめした所でニャーニャー泣いていた事だけは記憶している");
+    });
+});
+
+describe('Retrieverのテスト', () => {
+
+    it("VectorStoreのRetriever化", async () => {
+        documents = [    
+            new Document({ pageContent: "doc1" }),
+            new Document({ pageContent: "doc2" }),
+            new Document({ pageContent: "doc3" }),
+        ];
+        const result = await retriever1();
+        expect(result.length).toBe(3);
+        expect(result[0].pageContent).toBe("doc1");
+        expect(result[1].pageContent).toBe("doc2");
+        expect(result[2].pageContent).toBe("doc3");
+    });
+
+    it("MyRetriever", async () => {
+        const result = await retriever2();
+        expect(result.length).toBe(1);
+        expect(result[0].pageContent).toBe("すみっコぐらしはいいぞ。");
     });
 });
