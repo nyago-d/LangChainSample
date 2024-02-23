@@ -5,6 +5,7 @@
   "scripts": {
     "basic": "ts-node basic_execute.ts",
     "retrieval": "ts-node retrieval_execute.ts",
+    "rag": "ts-node rag_execute.ts",
     "test": "jest"
   },
   "keywords": [],
